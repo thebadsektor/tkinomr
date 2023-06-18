@@ -1,0 +1,96 @@
+import tkinter as tk
+from PIL import ImageTk, Image
+import customtkinter
+
+customtkinter.set_appearance_mode("dark")
+customtkinter.set_default_color_theme("blue")
+
+class App(customtkinter.CTk):
+    def __init__(self):
+        super().__init__()
+
+        # Configure window
+        self.title("OMR Application")
+        self.geometry("1100x580")
+
+        self.grid_columnconfigure(0, weight=1)  # Set weight to 1 for column 0
+        self.grid_columnconfigure(1, weight=2)  # Set weight to 2 for column 1
+        self.grid_rowconfigure(3, weight=1)
+
+        self.header_frame = customtkinter.CTkFrame(self, width=140, corner_radius=5)
+        self.header_frame.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+        self.header_frame.grid_columnconfigure(0, weight=1)  # Expand the single column
+
+        self.header_label = customtkinter.CTkLabel(self.header_frame, text="Examination Paper Auto-Evaluation", font=customtkinter.CTkFont(size=20, weight="bold"))
+        self.header_label.grid(row=0, column=0, pady=(10, 5))
+
+        self.subheader_label = customtkinter.CTkLabel(self.header_frame, text="Made with OpenCV", font=customtkinter.CTkFont(size=14))
+        self.subheader_label.grid(row=1, column=0, pady=(5, 10))
+    
+        self.image_frame = customtkinter.CTkFrame(self, corner_radius=5) 
+        self.image_frame.grid(row=1, column=0, rowspan=3, padx=10, pady=10, sticky="nsew")
+        self.image_frame.bind("<Configure>", self.update_image)
+
+        # self.parameters_frame = customtkinter.CTkFrame(self, corner_radius=5) 
+        # self.parameters_frame.grid(row=1, column=1, rowspan=3, padx=10, pady=10, sticky="nsew")
+
+        # create tabview
+        self.parameters_frame = customtkinter.CTkTabview(self, width=250)
+        self.parameters_frame.grid(row=1, column=1, rowspan=3, padx=10, pady=0, sticky="nsew")
+        self.parameters_frame.add("RAW")
+        self.parameters_frame.add("Processed")
+        self.parameters_frame.tab("RAW").grid_columnconfigure(0, weight=1)  # configure grid of individual tabs
+        self.parameters_frame.tab("Processed").grid_columnconfigure(0, weight=1)
+
+        self.parameters_frame2 = customtkinter.CTkFrame(self.parameters_frame, corner_radius=5) 
+        self.parameters_frame2.grid(row=1, column=1, rowspan=3, padx=10, pady=10, sticky="nsew")
+
+        self.combobox_1 = customtkinter.CTkComboBox(self.parameters_frame.tab("RAW"),
+                                                    values=["Value 1", "Value 2", "Value Long....."])
+        self.combobox_1.grid(row=1, column=0, padx=20, pady=(10, 10))
+
+        self.status_bar = customtkinter.CTkFrame(self, height=30, corner_radius=5)
+        self.status_bar.grid(row=4, column=0, padx=10, pady=10, columnspan=2, sticky="ew")
+        self.status_label = customtkinter.CTkLabel(self.status_bar, text="Status: Ready")
+        self.status_label.grid(row=0, column=0, padx=(10, 5))
+
+        self.update_image(None)  # Call update_image to initially display the image
+
+    def update_image(self, event):
+        image_path = "images/sample_sheet.jpg"  # Replace with the path to your image
+        image = Image.open(image_path)
+
+        # Check if image_frame has a valid width and height
+        frame_width, frame_height = self.image_frame.winfo_width(), self.image_frame.winfo_height()
+        if frame_width > 0 and frame_height > 0:
+            # Calculate the new size of the image based on the frame dimensions
+            image_ratio = image.width / image.height
+            frame_ratio = frame_width / frame_height
+
+            if frame_ratio > image_ratio:
+                new_width = int(frame_height * image_ratio)
+                new_height = frame_height
+            else:
+                new_width = frame_width
+                new_height = int(frame_width / image_ratio)
+
+            # Resize the image if the dimensions are valid
+            if new_width > 0 and new_height > 0:
+                image_margin = 40
+                resized_image = image.resize((new_width - image_margin, new_height - image_margin), Image.ANTIALIAS)
+
+                # Create a PhotoImage object from the resized image
+                photo = ImageTk.PhotoImage(resized_image)
+
+                # Update the label with the resized image
+                image_label = tk.Label(self.image_frame, image=photo)
+                image_label.image = photo  # Store a reference to prevent garbage collection
+                image_label.place(relx=0.5, rely=0.5, anchor="center")  # Place the label within the image frame
+
+                # Create and place the button on top of the image
+                # button = customtkinter.CTkButton(self.image_frame, text="Button")
+                # button.place(relx=0.95, rely=0.05, anchor="ne")
+
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()
